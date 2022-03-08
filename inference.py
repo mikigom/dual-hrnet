@@ -11,6 +11,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from skimage.io import imread, imsave
+from skimage.transform import resize
 from yacs.config import CfgNode
 
 from models.dual_hrnet import get_model
@@ -19,12 +20,13 @@ multiprocessing.set_start_method('spawn', True)
 warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
+
 parser.add_argument('in_pre_path', type=str, default='test_images/test_pre_00000.png')
 parser.add_argument('in_post_path', type=str, default='test_images/test_post_00000.png')
-parser.add_argument('out_loc_path', type=str, default='test_images/test_loc_00000.png')
-parser.add_argument('out_cls_path', type=str, default='test_images/test_cls_00000.png')
-parser.add_argument('--model_config_path', type=str, default='configs/model.yaml')
-parser.add_argument('--model_weight_path', type=str, default='weights/weight.pth')
+parser.add_argument('--out_loc_path', type=str, default='test_images/test_loc_00000.png')
+parser.add_argument('--out_cls_path', type=str, default='test_images/test_cls_00000.png')
+parser.add_argument('--model_config_path', type=str, default='configs/dual-hrnet.yaml')
+parser.add_argument('--model_weight_path', type=str, default='/nas/workspace/jhseo/dual-hrnet/ckpt/checkpoint.ckpt/hrnet_500')
 parser.add_argument('--is_use_gpu', action='store_true', dest='is_use_gpu')
 parser.add_argument('--is_vis', action='store_true', dest='is_vis')
 
@@ -46,8 +48,8 @@ class ModelWraper(nn.Module):
         inputs_post = Variable(inputs_post)
 
         if self.is_use_gpu:
-            inputs_pre = inputs_pre.cuda()
-            inputs_post = inputs_post.cuda()
+            inputs_pre = inputs_pre.cuda().float()
+            inputs_post = inputs_post.cuda().float()
 
         pred_dict = self.model(inputs_pre, inputs_post)
         loc = F.interpolate(pred_dict['loc'], size=inputs_pre.size()[2:4], mode='bilinear')
@@ -95,6 +97,7 @@ def main():
 
     pre_image = imread(args.in_pre_path)
     post_image = imread(args.in_post_path)
+    post_image = resize(post_image, (pre_image.shape[0], pre_image.shape[1]), preserve_range=True).astype(np.uint8)
 
     inputs_pre = image_transforms(pre_image)
     inputs_post = image_transforms(post_image)
@@ -124,7 +127,8 @@ def main():
         compare_img = np.concatenate((pre_image, mask_map_img, post_image), axis=1)
 
         out_dir = os.path.dirname(args.out_loc_path)
-        imsave(os.path.join(out_dir, 'compare_img.png'), compare_img)
+        basename = os.path.basename(args.in_post_path).split('.')[0]
+        imsave(os.path.join(out_dir, f'compare_img-{basename}.png'), compare_img)
 
 
 if __name__ == '__main__':
