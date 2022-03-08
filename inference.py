@@ -25,8 +25,8 @@ parser.add_argument('in_pre_path', type=str, default='test_images/test_pre_00000
 parser.add_argument('in_post_path', type=str, default='test_images/test_post_00000.png')
 parser.add_argument('--out_loc_path', type=str, default='test_images/test_loc_00000.png')
 parser.add_argument('--out_cls_path', type=str, default='test_images/test_cls_00000.png')
-parser.add_argument('--model_config_path', type=str, default='configs/dual-hrnet.yaml')
-parser.add_argument('--model_weight_path', type=str, default='/nas/workspace/jhseo/dual-hrnet/ckpt/checkpoint.ckpt/hrnet_500')
+parser.add_argument('--model_config_path', type=str, default='configs/model.yaml')
+parser.add_argument('--model_weight_path', type=str, default='weights/weight.pth')
 parser.add_argument('--is_use_gpu', action='store_true', dest='is_use_gpu')
 parser.add_argument('--is_vis', action='store_true', dest='is_vis')
 
